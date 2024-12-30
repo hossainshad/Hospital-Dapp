@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthcare</title>
+    <style>
+        .form-section { margin: 20px; padding: 20px; border: 1px solid #ccc; }
+        .hidden { display: none; }
+        .error { color: red; }
+        .success { color: green; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .user-info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
+        #loader {
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .form-section input[type="text"],
+        .form-section input[type="number"],
+        .form-section select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .patient-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .patient-table th,
+        .patient-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .patient-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .patient-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .update-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .update-btn:hover {
+            background-color: #0056b3;
+        }
+        .update-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #adminSection {
+            margin-top: 30px;
+        }
+        #updatePatientForm {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .admin-only {
+            display: none;  /* Hidden by default */
+        }
+        .admin-active .admin-only {
+            display: block;  /* Show when admin is active */
+        }
+    </style>
+</head>
+<body>
+    <div class="user-info">
+        <h3>Current User Info</h3>
+        <p>Address: <span id="userAddress">Not connected</span></p>
+        <p>Role: <span id="userRole">None</span></p>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="form-section">
+        <h2>Registration</h2>
+        <div id="registrationForm">
+            <input type="text" id="name" placeholder="Name"><br><br>
+            <select id="role">
+                <option value="1">Admin</option>
+                <option value="3">Doctor</option>
+                <option value="2">Patient</option>
+            </select><br><br>
+            
+            <div id="patientFields" class="hidden">
+                <input type="number" id="age" placeholder="Age"><br><br>
+                <input type="text" id="gender" placeholder="Gender"><br><br>
+                <select id="vaccineStatus">
+                    <option value="0">Not Vaccinated</option>
+                    <option value="1">One Dose</option>
+                    <option value="2">Two Dose</option>
+                </select><br><br>
+                <input type="text" id="district" placeholder="District"><br><br>
+                <textarea id="symptoms" placeholder="Symptoms"></textarea><br><br>
+            </div>
+            
+            <button onclick="HealthcareApp.registerUser()">Register</button>
+            <p id="registrationMessage"></p>
+        </div>
+    </div>
+
+    <!-- Admin Section with Update Form -->
+    <div id="adminSection" class="admin-only">
+        <div id="updatePatientForm">
+            <h3>Update Patient</h3>
+            <input type="number" id="updatePatientId" placeholder="Patient ID"><br><br>
+            <select id="updateVaccineStatus">
+                <option value="0">Not Vaccinated</option>
+                <option value="1">One Dose</option>
+                <option value="2">Two Dose</option>
+            </select><br><br>
+            <input type="checkbox" id="isDead"> Mark as Deceased<br><br>
+            <button onclick="HealthcareApp.updatePatient()">Update Patient</button>
+            <p id="updateMessage"></p>
+        </div>
+    </div>
+
+    <!-- Rest of the content remains the same -->
+    <!-- Book Appointment Form -->
+    <div id="patientSection" class="form-section hidden">
+        <h2>Book Appointment (Patient Only)</h2>
+        <select id="doctorAddress" required>
+            <option value="">Select a Doctor</option>
+        </select>
+        <select id="timeSlot">
+            <option value="0">4:00 PM - 4:10 PM</option>
+            <option value="1">4:10 PM - 4:20 PM</option>
+            <option value="2">4:20 PM - 4:30 PM</option>
+            <option value="3">4:30 PM - 4:40 PM</option>
+            <option value="4">4:40 PM - 4:50 PM</option>
+        </select><br><br>
+        <button onclick="HealthcareApp.bookAppointment()">Book Appointment (1 ETH)</button>
+        <p id="bookingMessage"></p>
+    </div>
+
+    <!-- View Schedule Section -->
+    <div class="form-section">
+        <h2>View Doctor's Schedule</h2>
+        <input type="text" id="scheduleDoctor" placeholder="Doctor Address"><br><br>
+        <button onclick="HealthcareApp.viewDoctorSchedule()">View Schedule</button>
+        <div id="scheduleDisplay"></div>
+    </div>
+
+    <!-- Covid Trends Table -->
+    <div class="form-section">
+        <h2>Covid Trends</h2>
+        <table id="covidTrends">
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Median Age</td>
+                <td id="medianAge">-</td>
+            </tr>
+            <tr>
+                <td>Children (< 13 years)</td>
+                <td id="childrenPercentage">-</td>
+            </tr>
+            <tr>
+                <td>Teenage (13-19 years)</td>
+                <td id="teenagePercentage">-</td>
+            </tr>
+            <tr>
+                <td>Young (20-49 years)</td>
+                <td id="youngPercentage">-</td>
+            </tr>
+            <tr>
+                <td>Elder (≥ 50 years)</td>
+                <td id="elderPercentage">-</td>
+            </tr>
+        </table>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@truffle/contract@4.3.19/dist/truffle-contract.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
